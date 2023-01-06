@@ -3,7 +3,6 @@ import sqlite3
 import requests
 
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 
 bz_data = requests.get("https://api.hypixel.net/skyblock/bazaar").json()
@@ -14,13 +13,7 @@ all_products = bz_data["products"]
 product_list = []
 
 for product in all_products:
-    string = product
-    new_str = ""
-
-    for pos, char in enumerate(string):
-        new_str += char
-
-    product_list.append(new_str)
+    product_list.append(product)
 
 product_dict = {}
 for i in range(len(product_list)):
@@ -44,7 +37,7 @@ while choosing_product:
                 product_name = product
                 choosing_product = False
 
-conn = sqlite3.connect(r"C:\Programming\Hypixel Skyblock Thing\bz_data.db")
+conn = sqlite3.connect("bz_data.db")
 cur = conn.cursor()
 
 x_axis = []
@@ -69,16 +62,45 @@ df_sell = pd.DataFrame(dict(
     y=sell_y_axis
 ))
 
+line_mode = "lines"
+
+want_add_marker = True
+
+while want_add_marker:
+    response = str(input("Add markers? (Y/N): "))
+    if response.upper() == "Y":
+        line_mode = "lines+markers"
+        want_add_marker = False
+    elif response.upper() == "N":
+        want_add_marker = False
+    else:
+        print("invalid input, try again")
+
+
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=x_axis,
                          y=buy_y_axis,
-                         mode="lines+markers",
+                         mode=f"{line_mode}",
                          name="Buy Price"))
 fig.add_trace(go.Scatter(x=x_axis,
                          y=sell_y_axis,
-                         mode="lines+markers",
+                         mode=f"{line_mode}",
                          name="Sell Price"))
 fig.update_layout(title=f"{product_name}",
                   xaxis_title="Date",
                   yaxis_title="Price")
+fig.update_xaxes(rangebreaks=[dict(bounds=[24, 12], pattern="hour")])  # bounds is here so points at times when i sleep don't connect
+
+want_from_zero = True
+
+while want_from_zero:
+    response = str(input("Make the Y-axis start at zero? (Y/N): "))
+    if response.upper() == "Y":
+        fig.update_yaxes(rangemode="tozero")
+        want_from_zero = False
+    elif response.upper() == "N":
+        want_from_zero = False
+    else:
+        print("invalid input, try again")
+
 fig.show()

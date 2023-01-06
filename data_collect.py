@@ -2,9 +2,7 @@ import requests
 import sqlite3
 import time
 
-notExited = True
-
-conn = sqlite3.connect(r"C:\Programming\Hypixel Skyblock Thing\bz_data.db")
+conn = sqlite3.connect("bz_data.db")
 cur = conn.cursor()
 
 # get data of initial bazaar items
@@ -15,13 +13,7 @@ all_products = bz_data["products"]
 product_list = []
 
 for product in all_products:
-    string = product
-    new_str = ""
-
-    for pos, char in enumerate(string):
-        new_str += char
-
-    product_list.append(new_str)
+    product_list.append(product)
 
 product_dict = {}
 for i in range(len(product_list)):
@@ -36,7 +28,7 @@ for key, product in product_dict.items():
 
 req_count = 0
 
-while notExited:
+while True:
     bz_data = requests.get("https://api.hypixel.net/skyblock/bazaar").json()
     all_products = bz_data["products"]
     count = 0
@@ -44,7 +36,9 @@ while notExited:
     for key, product in product_dict.items():
 
         # lastUpdated is time (in milliseconds) since Jan 1, 1970
-        cur.execute(f"INSERT INTO {key} (timeUnix, buyPrice, sellPrice) VALUES ({str(bz_data['lastUpdated'])}, {float(all_products[list(product_dict.values())[count]]['quick_status']['buyPrice'])}, {float(all_products[list(product_dict.values())[count]]['quick_status']['sellPrice'])})")
+        cur.execute(f"INSERT INTO {key} (timeUnix, buyPrice, sellPrice) VALUES ({str(bz_data['lastUpdated'])},"
+                    f"{float(all_products[list(product_dict.values())[count]]['quick_status']['buyPrice'])},"
+                    f"{float(all_products[list(product_dict.values())[count]]['quick_status']['sellPrice'])})")
         count += 1
 
     req_count += 1
